@@ -64,4 +64,7 @@ UserSchema.methods.comparePassword = async function(candidatePassword: string): 
 };
 
 // Check if the model is already defined to prevent overwriting during hot reloads
-export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema); 
+const User = mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
+
+export { User };
+export default User; 

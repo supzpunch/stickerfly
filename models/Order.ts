@@ -144,4 +144,7 @@ const OrderSchema: Schema = new Schema(
 );
 
 // Check if the model is already defined to prevent overwriting during hot reloads
-export default mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema); 
+const Order = mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);
+
+export { Order };
+export default Order; 

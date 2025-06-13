@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '../../auth/[...nextauth]/route';
-import connectToDatabase from '@/lib/mongodb';
-import Order from '@/models/Order';
+import { connectToDatabase } from '@/lib/mongodb';
+import { Order } from '@/models/Order';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession();
 
     // Check if user is authenticated
     if (!session || !session.user) {

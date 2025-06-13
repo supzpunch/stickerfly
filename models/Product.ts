@@ -28,4 +28,7 @@ const ProductSchema: Schema = new Schema(
 );
 
 // Check if the model is already defined to prevent overwriting during hot reloads
-export default mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema); 
+const Product = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
+
+export { Product };
+export default Product; 
