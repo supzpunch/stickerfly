@@ -1,5 +1,17 @@
 import mongoose from 'mongoose';
 
+// Define the cached mongoose connection type
+interface MongooseCache {
+  conn: mongoose.Connection | null;
+  promise: Promise<typeof mongoose> | null;
+}
+
+// Declare global mongoose type
+declare global {
+  // eslint-disable-next-line no-var
+  var mongoose: MongooseCache | undefined;
+}
+
 const MONGODB_URI = process.env.MONGODB_URI;
 
 if (!MONGODB_URI) {
@@ -13,10 +25,11 @@ if (!MONGODB_URI) {
  * in development. This prevents connections growing exponentially
  * during API Route usage.
  */
-let cached = global.mongoose;
+let cached: MongooseCache = global.mongoose || { conn: null, promise: null };
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+// Initialize global mongoose cache if not exists
+if (!global.mongoose) {
+  global.mongoose = cached;
 }
 
 export async function connectToDatabase() {
@@ -33,8 +46,14 @@ export async function connectToDatabase() {
       return mongoose;
     });
   }
-  cached.conn = await cached.promise;
-  return cached.conn;
+  
+  try {
+    const mongoose = await cached.promise;
+    cached.conn = mongoose.connection;
+    return cached.conn;
+  } catch (e) {
+    throw e;
+  }
 }
 
 // Keep the default export for backward compatibility
