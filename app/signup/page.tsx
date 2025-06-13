@@ -59,26 +59,38 @@ export default function SignUp() {
         }),
       });
       
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        console.error('Error parsing response:', parseError);
+        throw new Error('Invalid response from server. Please try again later.');
+      }
       
       if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong');
+        throw new Error(data?.error || `Error: ${response.status} - ${response.statusText}`);
       }
       
       // Sign in the user after successful registration
-      const result = await signIn('credentials', {
-        redirect: false,
-        email: formData.email,
-        password: formData.password,
-      });
-      
-      if (result?.error) {
-        setError(result.error);
-        return;
+      try {
+        const result = await signIn('credentials', {
+          redirect: false,
+          email: formData.email,
+          password: formData.password,
+        });
+        
+        if (result?.error) {
+          setError(result.error);
+          return;
+        }
+        
+        router.push('/dashboard');
+        router.refresh();
+      } catch (signInError: any) {
+        console.error('Sign in error after registration:', signInError);
+        setError('Registration successful, but automatic login failed. Please try logging in manually.');
+        router.push('/login');
       }
-      
-      router.push('/dashboard');
-      router.refresh();
     } catch (err: any) {
       console.error('Signup error:', err);
       setError(err.message || 'An error occurred during signup');

@@ -3,9 +3,24 @@ import connectToDatabase from '@/lib/mongodb';
 import User from '@/models/User';
 import bcrypt from 'bcryptjs';
 
+// Force dynamic rendering to avoid caching issues
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json();
+    // Parse the request body
+    let body;
+    try {
+      body = await request.json();
+    } catch (e) {
+      console.error('Error parsing request body:', e);
+      return NextResponse.json(
+        { error: 'Invalid request format' },
+        { status: 400 }
+      );
+    }
+
+    const { name, email, password } = body;
 
     // Basic validation
     if (!name || !email || !password) {
@@ -32,38 +47,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await connectToDatabase();
-
-    // Check if user already exists
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
-    if (existingUser) {
+    try {
+      await connectToDatabase();
+    } catch (dbError) {
+      console.error('Database connection error:', dbError);
       return NextResponse.json(
-        { error: 'User with this email already exists' },
-        { status: 409 }
+        { error: 'Database connection failed' },
+        { status: 500 }
       );
     }
 
-    // Create new user
-    const user = new User({
-      name,
-      email: email.toLowerCase(),
-      password,
-    });
+    try {
+      // Check if user already exists
+      const existingUser = await User.findOne({ email: email.toLowerCase() });
+      if (existingUser) {
+        return NextResponse.json(
+          { error: 'User with this email already exists' },
+          { status: 409 }
+        );
+      }
 
-    await user.save();
+      // Create new user
+      const user = new User({
+        name,
+        email: email.toLowerCase(),
+        password,
+      });
 
-    return NextResponse.json(
-      { 
-        message: 'User created successfully',
-        user: {
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-        }
-      },
-      { status: 201 }
-    );
+      await user.save();
+
+      return NextResponse.json(
+        { 
+          message: 'User created successfully',
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+          }
+        },
+        { status: 201 }
+      );
+    } catch (mongoError) {
+      console.error('MongoDB operation error:', mongoError);
+      return NextResponse.json(
+        { error: 'Database operation failed' },
+        { status: 500 }
+      );
+    }
   } catch (error: any) {
     console.error('Signup error:', error);
     return NextResponse.json(
