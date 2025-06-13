@@ -40,11 +40,20 @@ export async function connectToDatabase() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI!, opts).then((mongoose) => {
-      return mongoose;
-    });
+    console.log(`Connecting to MongoDB with URI: ${MONGODB_URI!.replace(/:[^:@]+@/, ':****@')}`);
+    
+    cached.promise = mongoose.connect(MONGODB_URI!, opts)
+      .then((mongoose) => {
+        console.log('MongoDB connection successful');
+        return mongoose;
+      })
+      .catch((err) => {
+        console.error('MongoDB connection error:', err);
+        throw err;
+      });
   }
   
   try {
@@ -52,6 +61,7 @@ export async function connectToDatabase() {
     cached.conn = mongoose.connection;
     return cached.conn;
   } catch (e) {
+    console.error('Failed to establish MongoDB connection:', e);
     throw e;
   }
 }

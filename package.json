@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "create-admin": "node scripts/create-admin.js",
-    "test-db": "node scripts/test-db-connection.js"
+    "test-db": "node scripts/test-db-connection.js",
+    "test-db-formats": "node scripts/test-connection-formats.js"
   },
   "dependencies": {
     "autoprefixer": "^10.4.16",
