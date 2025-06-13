@@ -1,0 +1,36 @@
+{
+  "name": "stickerfly",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.1.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "mongodb": "^6.3.0",
+    "mongoose": "^8.1.1",
+    "next-auth": "^4.24.5",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^1.4.5-lts.1",
+    "cloudinary": "^1.41.3",
+    "react-hook-form": "^7.49.3",
+    "zod": "^3.22.4",
+    "tailwindcss": "^3.4.1",
+    "postcss": "^8.4.33",
+    "autoprefixer": "^10.4.16"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/react": "^18.2.48",
+    "@types/node": "^20.11.5",
+    "@types/bcryptjs": "^2.4.6",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.1.0"
+  }
+} 
