@@ -3,6 +3,9 @@ import { connectToDatabase } from '@/lib/mongodb';
 import { Order } from '@/models/Order';
 import { getServerSession } from 'next-auth';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET all orders for the current user
 export async function GET(request: Request) {
   try {

@@ -1,7 +1,7 @@
 import './globals.css'
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
-import { SessionProvider } from 'next-auth/react'
+import SessionWrapper from './components/SessionWrapper'
 import Navigation from './components/Navigation'
 import Footer from './components/Footer'
 
@@ -20,13 +20,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <SessionProvider>
+        <SessionWrapper>
           <div className="flex flex-col min-h-screen">
             <Navigation />
             <main className="flex-grow">{children}</main>
             <Footer />
           </div>
-        </SessionProvider>
+        </SessionWrapper>
       </body>
     </html>
   )
