@@ -41,6 +41,8 @@ export async function connectToDatabase() {
     const opts = {
       bufferCommands: false,
       serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+      // Set the database name explicitly if not in the connection string
+      dbName: MONGODB_URI?.includes('/stickerfly') ? undefined : 'stickerfly',
     };
 
     console.log(`Connecting to MongoDB with URI: ${MONGODB_URI!.replace(/:[^:@]+@/, ':****@')}`);

@@ -4,8 +4,8 @@ const { MongoClient } = require('mongodb');
 async function testDirectConnection() {
   console.log('Starting direct MongoDB connection test...');
   
-  // Get the MongoDB URI from environment variable or use a default for testing
-  const uri = process.env.MONGODB_URI || 'mongodb://root:password@mongodb-1:27017/default?authSource=admin';
+  // Get the MongoDB URI from environment variable or use the correct internal URI for testing
+  const uri = process.env.MONGODB_URI || 'mongodb://root:stickerfly123%21@mcw484g0swo40g8cwwgos4cw:27017/stickerfly?directConnection=true';
   
   // Hide password in logs
   console.log('Attempting to connect with URI:', uri.replace(/:([^:@]+)@/, ':****@'));
@@ -22,7 +22,7 @@ async function testDirectConnection() {
     console.log('✅ Connected successfully to MongoDB server');
     
     // Get the database name from the connection string or use default
-    const dbName = uri.split('/').pop().split('?')[0] || 'default';
+    const dbName = uri.split('/').pop().split('?')[0] || 'stickerfly';
     const db = client.db(dbName);
     console.log(`Using database: ${dbName}`);
     

@@ -4,24 +4,24 @@ const mongoose = require('mongoose');
 async function testConnectionFormats() {
   // Get the base connection info from environment variables
   const username = 'root';
-  const password = process.env.MONGODB_PASSWORD || 'your_password_here';
-  const host = 'mongodb-1';
+  const password = process.env.MONGODB_PASSWORD || 'stickerfly123%21'; // URL encoded ! character
+  const host = 'mcw484g0swo40g8cwwgos4cw';
   const port = '27017';
-  const database = 'default';
+  const database = 'stickerfly';
   
   // Different connection string formats to try
   const connectionStrings = [
-    // Format 1: Basic format
-    `mongodb://${username}:${password}@${host}:${port}/${database}`,
+    // Format 1: Coolify internal format with directConnection
+    `mongodb://${username}:${password}@${host}:${port}/${database}?directConnection=true`,
     
     // Format 2: With authSource=admin
     `mongodb://${username}:${password}@${host}:${port}/${database}?authSource=admin`,
     
-    // Format 3: With authSource=admin and other options
-    `mongodb://${username}:${password}@${host}:${port}/${database}?authSource=admin&retryWrites=true&w=majority`,
+    // Format 3: With both directConnection and authSource
+    `mongodb://${username}:${password}@${host}:${port}/${database}?directConnection=true&authSource=admin`,
     
-    // Format 4: Using IP instead of hostname (example IP - replace with actual)
-    `mongodb://${username}:${password}@172.17.0.1:${port}/${database}?authSource=admin`,
+    // Format 4: Without database name
+    `mongodb://${username}:${password}@${host}:${port}/?directConnection=true`,
   ];
   
   // Try each connection string
