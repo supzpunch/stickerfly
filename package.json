@@ -10,7 +10,8 @@
     "create-admin": "node scripts/create-admin.js",
     "test-db": "node scripts/test-db-connection.js",
     "test-db-formats": "node scripts/test-connection-formats.js",
-    "test-db-direct": "node scripts/direct-mongo-test.js"
+    "test-db-direct": "node scripts/direct-mongo-test.js",
+    "test-mongo-tcp": "node scripts/simple-mongo-test.js"
   },
   "dependencies": {
     "autoprefixer": "^10.4.16",

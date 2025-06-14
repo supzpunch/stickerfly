@@ -36,6 +36,10 @@ COPY --from=builder /app/public ./public
 # Copy scripts directory for admin user creation and database testing
 COPY --from=builder --chown=nextjs:nodejs /app/scripts ./scripts
 
+# Install only production dependencies needed for scripts
+COPY package.json package-lock.json ./
+RUN npm install --only=production mongodb mongoose bcryptjs
+
 # Set the correct permission for prerender cache
 RUN mkdir .next
 RUN chown nextjs:nodejs .next
