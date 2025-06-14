@@ -1,15 +1,22 @@
 import { NextResponse } from 'next/server';
-import { v2 as cloudinary } from 'cloudinary';
+import { writeFile, mkdir } from 'fs/promises';
+import { join } from 'path';
+import { v4 as uuidv4 } from 'uuid';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+// Create uploads directory if it doesn't exist
+async function ensureUploadDir() {
+  const uploadDir = join(process.cwd(), 'public', 'uploads');
+  try {
+    await mkdir(uploadDir, { recursive: true });
+    return uploadDir;
+  } catch (error) {
+    console.error('Error creating upload directory:', error);
+    throw error;
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -43,34 +50,30 @@ export async function POST(request: Request) {
       );
     }
 
-    // Convert file to base64
+    // Generate unique filename
+    const fileExtension = file.name.split('.').pop() || '';
+    const uniqueFilename = `${uuidv4()}.${fileExtension}`;
+    
+    // Ensure upload directory exists
+    const uploadDir = await ensureUploadDir();
+    
+    // File path where the image will be saved
+    const filePath = join(uploadDir, uniqueFilename);
+    
+    // Convert file to buffer
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    const base64String = buffer.toString('base64');
-    const dataURI = `data:${file.type};base64,${base64String}`;
+    
+    // Write file to the server's filesystem
+    await writeFile(filePath, buffer);
+    
+    // Public URL for the uploaded file
+    const publicUrl = `/uploads/${uniqueFilename}`;
 
-    // Upload to Cloudinary
-    const result = await new Promise((resolve, reject) => {
-      cloudinary.uploader.upload(
-        dataURI,
-        {
-          folder: 'stickerfly',
-          resource_type: 'image',
-        },
-        (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
-          }
-        }
-      );
-    });
-
-    // Return the Cloudinary URL
+    // Return the URL to the uploaded file
     return NextResponse.json({
-      url: (result as any).secure_url,
-      public_id: (result as any).public_id,
+      url: publicUrl,
+      public_id: uniqueFilename,
     });
   } catch (error) {
     console.error('Error uploading file:', error);

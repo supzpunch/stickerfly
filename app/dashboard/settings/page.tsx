@@ -35,7 +35,7 @@ export default function Settings() {
       city: '',
       state: '',
       zip: '',
-      country: 'United States'
+      country: 'United Kingdom'
     },
     preferences: {
       emailNotifications: true,
@@ -56,15 +56,81 @@ export default function Settings() {
   }, [status, router]);
 
   useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (session?.user?.email) {
+        try {
+          const response = await fetch('/api/user/profile');
+          
+          if (!response.ok) {
+            throw new Error('Failed to fetch profile data');
+          }
+          
+          const data = await response.json();
+          
+          if (data.user) {
+            setProfile({
+              name: data.user.name || '',
+              email: data.user.email || '',
+              phone: data.user.phone || '',
+              address: data.user.address || {
+                street: '',
+                city: '',
+                state: '',
+                zip: '',
+                country: 'United Kingdom'
+              },
+              preferences: data.user.preferences || {
+                emailNotifications: true,
+                smsNotifications: false,
+                marketingEmails: true
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error fetching profile:', error);
+          setError('Failed to load profile data. Please try again later.');
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+    
     if (session?.user) {
-      setProfile(prev => ({
-        ...prev,
-        name: session.user.name || '',
-        email: session.user.email || ''
-      }));
-      setIsLoading(false);
+      fetchUserProfile();
     }
   }, [session]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
+    
+    if (name.includes('.')) {
+      const [section, field] = name.split('.');
+      
+      if (section === 'address') {
+        setProfile(prev => ({
+          ...prev,
+          address: {
+            ...prev.address!,
+            [field]: value
+          }
+        }));
+      } else if (section === 'preferences') {
+        setProfile(prev => ({
+          ...prev,
+          preferences: {
+            ...prev.preferences!,
+            [field]: checked
+          }
+        }));
+      }
+    } else {
+      setProfile(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
+    }
+  };
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,10 +148,11 @@ export default function Settings() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update profile');
       }
 
-      setSuccess('Profile updated successfully! 🎉');
+      setSuccess('Profile updated successfully!');
       
       // Update session if name changed
       if (profile.name !== session?.user?.name) {
@@ -131,7 +198,7 @@ export default function Settings() {
         throw new Error(data.error || 'Failed to change password');
       }
 
-      setSuccess('Password changed successfully! 🔒');
+      setSuccess('Password changed successfully!');
       (e.target as HTMLFormElement).reset();
     } catch (err: any) {
       setError(err.message || 'Failed to change password');
@@ -144,8 +211,11 @@ export default function Settings() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
         <div className="text-center">
-          <div className="animate-spin mb-4 text-4xl">
-            🪰
+          <div className="animate-spin mb-4">
+            <svg className="h-10 w-10 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
           </div>
           <h2 className="text-xl font-semibold mb-2">Loading settings...</h2>
           <p className="text-gray-500">Please wait while we fetch your account settings.</p>
@@ -161,12 +231,10 @@ export default function Settings() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
       <div className="container mx-auto px-4 py-8">
-        {/* Header with fly theme */}
+        {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-center mb-4">
-            <span className="text-3xl mr-3 animate-bounce">🪰</span>
+          <div className="text-center mb-4">
             <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-            <span className="text-3xl ml-3 animate-bounce">🪰</span>
           </div>
           <p className="text-gray-600 text-center">Customize your StickerFly experience and manage your account!</p>
         </div>
@@ -176,7 +244,9 @@ export default function Settings() {
           <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6 rounded-r-lg">
             <div className="flex">
               <div className="flex-shrink-0">
-                <span className="text-green-400 text-xl">✅</span>
+                <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
               </div>
               <div className="ml-3">
                 <p className="text-sm text-green-700">{success}</p>
@@ -189,7 +259,9 @@ export default function Settings() {
           <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6 rounded-r-lg">
             <div className="flex">
               <div className="flex-shrink-0">
-                <span className="text-red-400 text-xl">❌</span>
+                <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
               </div>
               <div className="ml-3">
                 <p className="text-sm text-red-700">{error}</p>
@@ -243,7 +315,7 @@ export default function Settings() {
                     type="text"
                     id="name"
                     value={profile.name}
-                    onChange={(e) => setProfile(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={handleInputChange}
                     className="input-field text-black"
                     required
                   />
@@ -257,7 +329,7 @@ export default function Settings() {
                     type="email"
                     id="email"
                     value={profile.email}
-                    onChange={(e) => setProfile(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={handleInputChange}
                     className="input-field text-black"
                     required
                   />
@@ -271,7 +343,7 @@ export default function Settings() {
                     type="tel"
                     id="phone"
                     value={profile.phone || ''}
-                    onChange={(e) => setProfile(prev => ({ ...prev, phone: e.target.value }))}
+                    onChange={handleInputChange}
                     className="input-field text-black"
                     placeholder="(555) 123-4567"
                   />
@@ -317,10 +389,7 @@ export default function Settings() {
                     type="text"
                     id="street"
                     value={profile.address?.street || ''}
-                    onChange={(e) => setProfile(prev => ({ 
-                      ...prev, 
-                      address: { ...prev.address!, street: e.target.value }
-                    }))}
+                    onChange={handleInputChange}
                     className="input-field text-black"
                     placeholder="123 Main Street"
                   />
@@ -335,10 +404,7 @@ export default function Settings() {
                       type="text"
                       id="city"
                       value={profile.address?.city || ''}
-                      onChange={(e) => setProfile(prev => ({ 
-                        ...prev, 
-                        address: { ...prev.address!, city: e.target.value }
-                      }))}
+                      onChange={handleInputChange}
                       className="input-field text-black"
                       placeholder="New York"
                     />
@@ -352,10 +418,7 @@ export default function Settings() {
                       type="text"
                       id="state"
                       value={profile.address?.state || ''}
-                      onChange={(e) => setProfile(prev => ({ 
-                        ...prev, 
-                        address: { ...prev.address!, state: e.target.value }
-                      }))}
+                      onChange={handleInputChange}
                       className="input-field text-black"
                       placeholder="NY"
                     />
@@ -369,10 +432,7 @@ export default function Settings() {
                       type="text"
                       id="zip"
                       value={profile.address?.zip || ''}
-                      onChange={(e) => setProfile(prev => ({ 
-                        ...prev, 
-                        address: { ...prev.address!, zip: e.target.value }
-                      }))}
+                      onChange={handleInputChange}
                       className="input-field text-black"
                       placeholder="10001"
                     />
@@ -385,16 +445,13 @@ export default function Settings() {
                   </label>
                   <select
                     id="country"
-                    value={profile.address?.country || 'United States'}
-                    onChange={(e) => setProfile(prev => ({ 
-                      ...prev, 
-                      address: { ...prev.address!, country: e.target.value }
-                    }))}
+                    value={profile.address?.country || 'United Kingdom'}
+                    onChange={handleInputChange}
                     className="input-field text-black"
                   >
-                    <option value="United States">United States</option>
-                    <option value="Canada">Canada</option>
                     <option value="United Kingdom">United Kingdom</option>
+                    <option value="Canada">Canada</option>
+                    <option value="United States">United States</option>
                     <option value="Australia">Australia</option>
                   </select>
                 </div>
@@ -513,10 +570,7 @@ export default function Settings() {
                     <input
                       type="checkbox"
                       checked={profile.preferences?.emailNotifications || false}
-                      onChange={(e) => setProfile(prev => ({
-                        ...prev,
-                        preferences: { ...prev.preferences!, emailNotifications: e.target.checked }
-                      }))}
+                      onChange={handleInputChange}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
@@ -532,10 +586,7 @@ export default function Settings() {
                     <input
                       type="checkbox"
                       checked={profile.preferences?.smsNotifications || false}
-                      onChange={(e) => setProfile(prev => ({
-                        ...prev,
-                        preferences: { ...prev.preferences!, smsNotifications: e.target.checked }
-                      }))}
+                      onChange={handleInputChange}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
@@ -551,10 +602,7 @@ export default function Settings() {
                     <input
                       type="checkbox"
                       checked={profile.preferences?.marketingEmails || false}
-                      onChange={(e) => setProfile(prev => ({
-                        ...prev,
-                        preferences: { ...prev.preferences!, marketingEmails: e.target.checked }
-                      }))}
+                      onChange={handleInputChange}
                       className="sr-only peer"
                     />
                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
