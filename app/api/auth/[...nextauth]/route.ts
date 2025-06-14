@@ -4,6 +4,18 @@ import bcrypt from 'bcryptjs';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 
+// Force dynamic rendering to avoid caching issues
+export const dynamic = 'force-dynamic';
+
+// Determine if we're using HTTPS based on the NEXTAUTH_URL
+const isHttps = process.env.NEXTAUTH_URL?.startsWith('https') ?? false;
+
+// For non-HTTPS environments in production, we need to disable secure cookies
+const useSecureCookies = process.env.NODE_ENV === 'production' && isHttps;
+
+// Log configuration for debugging
+console.log(`NextAuth Configuration: NODE_ENV=${process.env.NODE_ENV}, useSecureCookies=${useSecureCookies}`);
+
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
@@ -17,7 +29,12 @@ const handler = NextAuth({
           throw new Error('Please provide email and password');
         }
 
-        await connectToDatabase();
+        try {
+          await connectToDatabase();
+        } catch (error) {
+          console.error('Database connection error in NextAuth:', error);
+          throw new Error('Database connection failed');
+        }
         
         const user = await User.findOne({ email: credentials.email });
         
@@ -50,7 +67,7 @@ const handler = NextAuth({
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production' && process.env.NEXTAUTH_URL?.startsWith('https')
+        secure: useSecureCookies
       },
     },
     callbackUrl: {
@@ -59,7 +76,7 @@ const handler = NextAuth({
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production' && process.env.NEXTAUTH_URL?.startsWith('https')
+        secure: useSecureCookies
       },
     },
     csrfToken: {
@@ -68,7 +85,7 @@ const handler = NextAuth({
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production' && process.env.NEXTAUTH_URL?.startsWith('https')
+        secure: useSecureCookies
       },
     },
   },

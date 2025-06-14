@@ -7,6 +7,8 @@ import bcrypt from 'bcryptjs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  console.log('Processing signup request...');
+  
   try {
     // Parse the request body
     let body;
@@ -47,10 +49,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('Attempting to connect to database...');
     try {
       await connectToDatabase();
+      console.log('Database connection successful');
     } catch (dbError) {
-      console.error('Database connection error:', dbError);
+      console.error('Database connection error during signup:', dbError);
       return NextResponse.json(
         { error: 'Database connection failed' },
         { status: 500 }
@@ -59,6 +63,7 @@ export async function POST(request: NextRequest) {
 
     try {
       // Check if user already exists
+      console.log('Checking if user exists...');
       const existingUser = await User.findOne({ email: email.toLowerCase() });
       if (existingUser) {
         return NextResponse.json(
@@ -68,6 +73,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Create new user
+      console.log('Creating new user...');
       const user = new User({
         name,
         email: email.toLowerCase(),
@@ -75,6 +81,7 @@ export async function POST(request: NextRequest) {
       });
 
       await user.save();
+      console.log('User created successfully');
 
       return NextResponse.json(
         { 
@@ -89,7 +96,7 @@ export async function POST(request: NextRequest) {
         { status: 201 }
       );
     } catch (mongoError) {
-      console.error('MongoDB operation error:', mongoError);
+      console.error('MongoDB operation error during signup:', mongoError);
       return NextResponse.json(
         { error: 'Database operation failed' },
         { status: 500 }
