@@ -12,7 +12,9 @@
     "test-db-formats": "node scripts/test-connection-formats.js",
     "test-db-direct": "node scripts/direct-mongo-test.js",
     "test-mongo-tcp": "node scripts/simple-mongo-test.js",
-    "check-env": "node scripts/env-check.js"
+    "check-env": "node scripts/env-check.js",
+    "test-auth": "node scripts/auth-test.js",
+    "check-mongo": "node scripts/check-mongo-status.js"
   },
   "dependencies": {
     "autoprefixer": "^10.4.16",
