@@ -20,22 +20,20 @@
   --background-end-rgb: 255, 255, 255;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
-  }
+/* Force light mode for consistent styling */
+body {
+  color: #000000;
+  background: #ffffff;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+/* Ensure all text elements have proper color */
+* {
+  color: inherit;
+}
+
+/* Override any potential dark mode text colors */
+h1, h2, h3, h4, h5, h6, p, span, div, label {
+  color: inherit;
 }
 
 @layer components {
@@ -52,7 +50,19 @@ body {
   }
   
   .input-field {
-    @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent text-black;
+    @apply w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-600 focus:border-transparent bg-white text-gray-900 placeholder-gray-500;
+  }
+  
+  /* Additional input styling for better visibility */
+  input[type="text"], 
+  input[type="email"], 
+  input[type="password"], 
+  input[type="number"], 
+  input[type="tel"], 
+  input[type="url"], 
+  textarea, 
+  select {
+    @apply bg-white text-gray-900 placeholder-gray-500;
   }
   
   .form-label {

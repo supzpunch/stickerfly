@@ -275,7 +275,7 @@ export default function EditProduct() {
                         value={product.name}
                         onChange={handleChange}
                         required
-                        className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md text-black"
+                        className="input-field"
                       />
                     </div>
                   </div>
@@ -295,7 +295,7 @@ export default function EditProduct() {
                         step="0.01"
                         min="0"
                         required
-                        className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md text-black"
+                        className="input-field"
                       />
                     </div>
                   </div>
@@ -311,7 +311,7 @@ export default function EditProduct() {
                         name="category"
                         value={product.category}
                         onChange={handleChange}
-                        className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md text-black"
+                        className="input-field"
                       >
                         <option value="logo">Logo Stickers</option>
                         <option value="character">Character Stickers</option>
@@ -446,7 +446,7 @@ export default function EditProduct() {
                         value={product.description}
                         onChange={handleChange}
                         required
-                        className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md text-black"
+                        className="input-field"
                       />
                     </div>
                     <p className="mt-2 text-sm text-gray-500">

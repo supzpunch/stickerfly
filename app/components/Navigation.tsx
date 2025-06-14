@@ -43,6 +43,9 @@ export default function Navigation() {
             <Link href="/products" className="text-gray-700 hover:text-primary-600">
               Products
             </Link>
+            <Link href="/blog" className="text-gray-700 hover:text-primary-600">
+              Blog
+            </Link>
             <Link href="/custom-order" className="text-gray-700 hover:text-primary-600">
               Custom Order
             </Link>
@@ -97,6 +100,13 @@ export default function Navigation() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Products
+              </Link>
+              <Link 
+                href="/blog" 
+                className="text-gray-700 hover:text-primary-600"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Blog
               </Link>
               <Link 
                 href="/custom-order" 
@@ -158,4 +168,4 @@ export default function Navigation() {
       </div>
     </header>
   );
-} 
+}

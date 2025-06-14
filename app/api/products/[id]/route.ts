@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 
+const isDev = process.env.NODE_ENV === 'development';
+
 // GET single product by ID
 export async function GET(
   request: Request,
@@ -9,6 +11,26 @@ export async function GET(
 ) {
   try {
     const { id } = params;
+    
+    // In development without MongoDB, return mock data
+    if (isDev && !process.env.MONGODB_URI) {
+      console.log('Development mode: Returning mock product');
+      const mockProduct = {
+        _id: id,
+        name: 'Mock Product',
+        description: 'This is a mock product for development',
+        price: 9.99,
+        category: 'logo',
+        imageUrl: '/placeholder-image.jpg',
+        sizes: [{ width: 3, height: 3, unit: 'in' }],
+        isCustom: false,
+        featured: false,
+        inStock: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      return NextResponse.json({ product: mockProduct });
+    }
     
     await connectToDatabase();
     const product = await Product.findById(id);
@@ -38,6 +60,17 @@ export async function PUT(
   try {
     const { id } = params;
     const data = await request.json();
+    
+    // In development without MongoDB, return mock success
+    if (isDev && !process.env.MONGODB_URI) {
+      console.log('Development mode: Updating mock product');
+      const mockProduct = {
+        _id: id,
+        ...data,
+        updatedAt: new Date()
+      };
+      return NextResponse.json({ product: mockProduct });
+    }
     
     await connectToDatabase();
     
@@ -71,6 +104,14 @@ export async function DELETE(
 ) {
   try {
     const { id } = params;
+    
+    // In development without MongoDB, return mock success
+    if (isDev && !process.env.MONGODB_URI) {
+      console.log('Development mode: Deleting mock product');
+      return NextResponse.json(
+        { message: 'Product deleted successfully' }
+      );
+    }
     
     await connectToDatabase();
     const product = await Product.findByIdAndDelete(id);

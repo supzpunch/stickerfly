@@ -9,12 +9,20 @@ interface Size {
   unit: string;
 }
 
+const isDev = process.env.NODE_ENV === 'development';
+
 // GET all products
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');
     const isCustom = searchParams.get('isCustom');
+    
+    // In development without MongoDB, return mock data
+    if (isDev && !process.env.MONGODB_URI) {
+      console.log('Development mode: Returning mock products');
+      return NextResponse.json({ products: [] });
+    }
     
     const query: any = {};
     
@@ -58,6 +66,18 @@ export async function POST(request: Request) {
         { error: 'Missing required fields' },
         { status: 400 }
       );
+    }
+    
+    // In development without MongoDB, return mock success
+    if (isDev && !process.env.MONGODB_URI) {
+      console.log('Development mode: Creating mock product');
+      const mockProduct = {
+        _id: 'mock-product-' + Date.now(),
+        ...data,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      return NextResponse.json({ product: mockProduct }, { status: 201 });
     }
     
     // Ensure sizes array is properly formatted

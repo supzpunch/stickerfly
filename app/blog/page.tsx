@@ -11,12 +11,35 @@ export default function BlogPage() {
       date: 'June 14, 2025',
       author: 'Sarah Johnson',
       authorRole: 'Marketing Director',
-      readTime: '5 min read',
+      readTime: '8 min read',
       slug: 'stickers-customer-retention',
-      image: '/images/blog/stickers-loyalty.jpg',
+      image: 'https://images.unsplash.com/photo-1715192983279-96944f4b7a48?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGRpZSUyMGN1dCUyMHN0aWNrZXJzfGVufDB8fDB8fHww',
       featured: true,
     },
-    // More blog posts would be added here
+    {
+      id: 2,
+      title: '5 Creative Ways to Use Custom Stickers in Your Marketing',
+      excerpt: 'Explore innovative ways to incorporate stickers into your marketing strategy and boost brand visibility.',
+      date: 'June 10, 2025',
+      author: 'Mike Chen',
+      authorRole: 'Creative Director',
+      readTime: '6 min read',
+      slug: 'creative-sticker-marketing',
+      image: 'https://images.unsplash.com/photo-1615821044195-d158c5b986de?q=80&w=1925&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      featured: false,
+    },
+    {
+      id: 3,
+      title: 'The Environmental Impact of Stickers: Choosing Sustainable Options',
+      excerpt: 'Learn about eco-friendly sticker materials and production methods for environmentally conscious businesses.',
+      date: 'June 5, 2025',
+      author: 'Emma Thompson',
+      authorRole: 'Sustainability Expert',
+      readTime: '7 min read',
+      slug: 'sustainable-stickers',
+      image: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?q=80&w=1000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+      featured: false,
+    },
   ];
 
   return (
@@ -33,14 +56,15 @@ export default function BlogPage() {
 
         <div className="mt-12 max-w-lg mx-auto grid gap-8 lg:grid-cols-3 lg:max-w-none">
           {blogPosts.map((post) => (
-            <div key={post.id} className="flex flex-col rounded-lg shadow-lg overflow-hidden">
+            <div key={post.id} className="flex flex-col rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
               <div className="flex-shrink-0">
                 <div className="h-48 w-full relative">
                   <Image
-                    src={post.image || '/images/blog/placeholder.jpg'}
+                    src={post.image}
                     alt={post.title}
                     fill
                     className="object-cover"
+                    priority={post.featured}
                   />
                 </div>
               </div>
@@ -54,8 +78,10 @@ export default function BlogPage() {
                     )}
                     <span>{post.date}</span>
                   </p>
-                  <Link href={`/blog/${post.slug}`} className="block mt-2">
-                    <p className="text-xl font-semibold text-gray-900">{post.title}</p>
+                  <Link href={`/blog/${post.slug}`} className="block mt-2 group">
+                    <p className="text-xl font-semibold text-gray-900 group-hover:text-primary-600 transition-colors">
+                      {post.title}
+                    </p>
                     <p className="mt-3 text-base text-gray-500">{post.excerpt}</p>
                   </Link>
                 </div>
@@ -80,6 +106,28 @@ export default function BlogPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Newsletter Signup Section */}
+        <div className="mt-16 bg-primary-50 rounded-lg p-8">
+          <div className="text-center">
+            <h3 className="text-2xl font-bold text-primary-900 mb-4">
+              Stay Updated with StickerFly
+            </h3>
+            <p className="text-primary-700 mb-6 max-w-2xl mx-auto">
+              Get the latest tips, trends, and insights about custom stickers and branding delivered to your inbox.
+            </p>
+            <div className="max-w-md mx-auto flex gap-3">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="input-field flex-1"
+              />
+              <button className="px-6 py-2 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 transition-colors">
+                Subscribe
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="mt-8 text-center">

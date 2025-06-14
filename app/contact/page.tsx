@@ -171,7 +171,7 @@ export default function ContactPage() {
                             value={formData.name}
                             onChange={handleChange}
                             required
-                            className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            className="input-field"
                           />
                         </div>
                       </div>
@@ -188,7 +188,7 @@ export default function ContactPage() {
                             value={formData.email}
                             onChange={handleChange}
                             required
-                            className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            className="input-field"
                           />
                         </div>
                       </div>
@@ -204,7 +204,7 @@ export default function ContactPage() {
                             value={formData.subject}
                             onChange={handleChange}
                             required
-                            className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            className="input-field"
                           >
                             <option value="">Please select</option>
                             <option value="order-inquiry">Order Inquiry</option>
@@ -229,7 +229,7 @@ export default function ContactPage() {
                             value={formData.message}
                             onChange={handleChange}
                             required
-                            className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                            className="input-field"
                           />
                         </div>
                       </div>
