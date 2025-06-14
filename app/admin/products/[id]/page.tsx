@@ -229,7 +229,7 @@ export default function EditProduct() {
                       </div>
                     ) : (
                       <ImageUploader 
-                        onUploadComplete={(url) => setProduct(prev => ({ ...prev, imageUrl: url }))}
+                        onImageUpload={(url) => setProduct(prev => ({ ...prev, imageUrl: url }))}
                         label="Upload Product Image"
                       />
                     )}

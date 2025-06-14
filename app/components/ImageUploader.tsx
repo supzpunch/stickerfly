@@ -9,9 +9,10 @@ import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 interface ImageUploaderProps {
   onImageUpload: (imageUrl: string) => void;
   className?: string;
+  label?: string;
 }
 
-export default function ImageUploader({ onImageUpload, className = '' }: ImageUploaderProps) {
+export default function ImageUploader({ onImageUpload, className = '', label = 'Upload Image' }: ImageUploaderProps) {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +101,11 @@ export default function ImageUploader({ onImageUpload, className = '' }: ImageUp
 
   return (
     <div className={`w-full ${className}`}>
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {label}
+        </label>
+      )}
       {!uploadedImage && !uploading ? (
         <div
           {...getRootProps()}

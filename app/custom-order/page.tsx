@@ -135,9 +135,12 @@ export default function CustomOrder() {
           <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <div className="px-4 py-5 sm:p-6">
               <form onSubmit={handleSubmit} className="space-y-8">
-                <div>
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Upload Your Design
+                  </label>
                   <ImageUploader 
-                    onUploadComplete={handleImageUpload}
+                    onImageUpload={handleImageUpload}
                     label="Upload Your Sticker Design"
                   />
                   <p className="mt-2 text-sm text-gray-500">
