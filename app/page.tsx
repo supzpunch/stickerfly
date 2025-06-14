@@ -33,7 +33,6 @@ export default function Home() {
             </div>
             <div className="md:w-1/2">
               <div className="relative h-80 w-full">
-                {D:\Stickerfly\lib\stickerfly_main.jpg}
                 <div className="bg-gray-200 h-full w-full rounded-lg flex items-center justify-center">
                   <span className="text-gray-500">Hero Image</span>
                 </div>
