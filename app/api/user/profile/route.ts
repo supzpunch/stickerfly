@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/options';
+import { getServerSession } from 'next-auth/next';
 import { connectToDatabase } from '@/lib/mongodb';
-import User from '@/models/User';
+import { User } from '@/models/User';
+import { authOptions } from '../../auth/options';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {

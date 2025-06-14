@@ -7,10 +7,10 @@ const isDev = process.env.NODE_ENV === 'development';
 // GET single product by ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     // In development without MongoDB, return mock data
     if (isDev && !process.env.MONGODB_URI) {
@@ -55,10 +55,10 @@ export async function GET(
 // PUT update product by ID (admin only)
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const data = await request.json();
     
     // In development without MongoDB, return mock success
@@ -100,10 +100,10 @@ export async function PUT(
 // DELETE product by ID (admin only)
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params;
+    const { id } = await params;
     
     // In development without MongoDB, return mock success
     if (isDev && !process.env.MONGODB_URI) {
@@ -133,4 +133,4 @@ export async function DELETE(
       { status: 500 }
     );
   }
-} 
+}

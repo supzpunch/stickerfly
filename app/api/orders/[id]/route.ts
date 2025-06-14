@@ -11,7 +11,7 @@ const isDev = process.env.NODE_ENV === 'development';
 // GET single order by ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -23,7 +23,7 @@ export async function GET(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
 
     // In development without MongoDB, return mock order data
     if (isDev && !process.env.MONGODB_URI) {
@@ -172,7 +172,7 @@ export async function GET(
 // PUT update order status (admin only)
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession();
@@ -184,7 +184,7 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
+    const { id } = await params;
     const data = await request.json();
     
     await connectToDatabase();

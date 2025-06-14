@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server';
 import { connectToDatabase } from '@/lib/mongodb';
 import { Product } from '@/models/Product';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // Define size type
 interface Size {
   width: number;

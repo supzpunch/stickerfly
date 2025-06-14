@@ -4,6 +4,9 @@ import { authOptions } from '../../../auth/options';
 import fs from 'fs';
 import path from 'path';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // Mock blog posts data for development (same as in main route)
 const mockBlogPosts = [
   {
@@ -199,7 +202,7 @@ let blogPosts = [...mockBlogPosts];
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -208,7 +211,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const postId = params.id;
+    const { id: postId } = await params;
     const post = blogPosts.find(p => p.id === postId);
 
     if (!post) {
@@ -224,7 +227,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -233,7 +236,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const postId = params.id;
+    const { id: postId } = await params;
     const body = await request.json();
     
     const postIndex = blogPosts.findIndex(p => p.id === postId);
@@ -328,7 +331,7 @@ export async function PUT(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -337,7 +340,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const postId = params.id;
+    const { id: postId } = await params;
     const body = await request.json();
     
     const postIndex = blogPosts.findIndex(p => p.id === postId);
@@ -363,7 +366,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -372,7 +375,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const postId = params.id;
+    const { id: postId } = await params;
     const postIndex = blogPosts.findIndex(p => p.id === postId);
     
     if (postIndex === -1) {

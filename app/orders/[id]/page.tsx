@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
@@ -40,9 +40,11 @@ interface Order {
   };
 }
 
-export default function OrderDetail({ params }: { params: { id: string } }) {
+export default function OrderDetail() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const params = useParams();
+  const orderId = params.id as string;
   const [order, setOrder] = useState<Order | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -55,11 +57,11 @@ export default function OrderDetail({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (status !== 'authenticated') return;
+      if (status !== 'authenticated' || !orderId) return;
       
       try {
         setIsLoading(true);
-        const response = await fetch(`/api/orders/${params.id}`);
+        const response = await fetch(`/api/orders/${orderId}`);
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -79,7 +81,7 @@ export default function OrderDetail({ params }: { params: { id: string } }) {
     };
 
     fetchOrder();
-  }, [status, params.id]);
+  }, [status, orderId]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -209,7 +211,7 @@ export default function OrderDetail({ params }: { params: { id: string } }) {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Order Items */}
           <div className="lg:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div className="bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold mb-4 flex items-center">
                 <span className="mr-2">📦</span>
                 Order Items
@@ -218,13 +220,12 @@ export default function OrderDetail({ params }: { params: { id: string } }) {
                 {order.orderItems.map((item, index) => (
                   <div key={index} className="flex items-center space-x-4 p-4 border rounded-lg">
                     {item.customImageUrl && (
-                      <div className="flex-shrink-0">
+                      <div className="relative w-16 h-16 flex-shrink-0">
                         <Image
                           src={item.customImageUrl}
-                          alt="Custom design"
-                          width={80}
-                          height={80}
-                          className="rounded-lg object-cover"
+                          alt={item.product.name}
+                          fill
+                          className="object-cover rounded"
                         />
                       </div>
                     )}
@@ -254,32 +255,12 @@ export default function OrderDetail({ params }: { params: { id: string } }) {
               <div className="space-y-2">
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total:</span>
-                  <span>${order.totalPrice.toFixed(2)}</span>
+                  <span>£{order.totalPrice.toFixed(2)}</span>
                 </div>
-              </div>
-            </div>
-
-            {/* Order Information */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold mb-4 flex items-center">
-                <span className="mr-2">ℹ️</span>
-                Order Information
-              </h2>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <span className="font-medium text-gray-700">Order Date:</span>
-                  <p className="text-gray-600">{new Date(order.createdAt).toLocaleDateString()}</p>
+                <div className="text-sm text-gray-500">
+                  <p>Order Date: {new Date(order.createdAt).toLocaleDateString()}</p>
+                  <p>Last Updated: {new Date(order.updatedAt).toLocaleDateString()}</p>
                 </div>
-                <div>
-                  <span className="font-medium text-gray-700">Last Updated:</span>
-                  <p className="text-gray-600">{new Date(order.updatedAt).toLocaleDateString()}</p>
-                </div>
-                {order.paymentInfo && (
-                  <div>
-                    <span className="font-medium text-gray-700">Payment Method:</span>
-                    <p className="text-gray-600 capitalize">{order.paymentInfo.method.replace('_', ' ')}</p>
-                  </div>
-                )}
               </div>
             </div>
 
@@ -290,29 +271,33 @@ export default function OrderDetail({ params }: { params: { id: string } }) {
                   <span className="mr-2">🏠</span>
                   Shipping Address
                 </h2>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-gray-700 space-y-1">
                   <p className="font-medium">{order.shippingAddress.name}</p>
                   <p>{order.shippingAddress.street}</p>
-                  <p>
-                    {order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.zip}
-                  </p>
+                  <p>{order.shippingAddress.city}, {order.shippingAddress.state}</p>
+                  <p>{order.shippingAddress.zip}</p>
                   <p>{order.shippingAddress.country}</p>
                 </div>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Action Buttons */}
-        <div className="mt-8 flex justify-center space-x-4">
-          <Link href="/dashboard/orders" className="btn-secondary inline-flex items-center">
-            <span className="mr-2">📋</span>
-            View All Orders
-          </Link>
-          <Link href="/contact" className="btn-primary inline-flex items-center">
-            <span className="mr-2">💬</span>
-            Contact Support
-          </Link>
+            {/* Payment Info */}
+            {order.paymentInfo && (
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-semibold mb-4 flex items-center">
+                  <span className="mr-2">💳</span>
+                  Payment Information
+                </h2>
+                <div className="text-sm text-gray-700 space-y-1">
+                  <p>Method: {order.paymentInfo.method.replace('_', ' ').toUpperCase()}</p>
+                  <p>Transaction ID: {order.paymentInfo.transactionId}</p>
+                  <p className={`font-medium ${order.paymentInfo.paid ? 'text-green-600' : 'text-red-600'}`}>
+                    Status: {order.paymentInfo.paid ? 'Paid' : 'Pending'}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

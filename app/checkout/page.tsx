@@ -1,10 +1,10 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import Link from 'next/link';
 
-export default function Checkout() {
+function CheckoutContent() {
   const searchParams = useSearchParams();
   const [orderDetails, setOrderDetails] = useState({
     productId: '',
@@ -133,5 +133,22 @@ export default function Checkout() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Checkout() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 py-12">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading checkout...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 } 

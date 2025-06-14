@@ -4,6 +4,9 @@ import { authOptions } from '../../auth/options';
 import fs from 'fs';
 import path from 'path';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // Mock blog posts data for development
 const mockBlogPosts = [
   {
