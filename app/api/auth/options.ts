@@ -3,6 +3,17 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/models/User';
 
+const isDev = process.env.NODE_ENV === 'development';
+
+// Mock admin user for development without MongoDB
+const mockAdminUser = {
+  id: 'mock-admin-id',
+  name: 'Admin User',
+  email: 'admin@example.com',
+  password: 'password',
+  role: 'admin'
+};
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -17,6 +28,19 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
+          // In development without MongoDB, allow mock admin login
+          if (isDev && !process.env.MONGODB_URI && 
+              credentials.email === mockAdminUser.email && 
+              credentials.password === mockAdminUser.password) {
+            console.log('Development mode: Using mock admin login');
+            return {
+              id: mockAdminUser.id,
+              name: mockAdminUser.name,
+              email: mockAdminUser.email,
+              role: mockAdminUser.role,
+            };
+          }
+
           await connectToDatabase();
           
           const user = await User.findOne({ email: credentials.email });

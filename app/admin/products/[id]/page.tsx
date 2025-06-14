@@ -7,6 +7,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import ImageUploader from '../../../components/ImageUploader';
 
+interface Size {
+  width: number;
+  height: number;
+  unit: string;
+}
+
 interface Product {
   _id: string;
   name: string;
@@ -14,6 +20,7 @@ interface Product {
   price: number;
   imageUrl: string;
   category: string;
+  sizes: Size[];
   isCustom: boolean;
   featured: boolean;
   inStock: boolean;
@@ -32,6 +39,7 @@ export default function EditProduct() {
     price: 0,
     imageUrl: '',
     category: 'logo',
+    sizes: [{ width: 3, height: 3, unit: 'in' }],
     isCustom: false,
     featured: false,
     inStock: true,
@@ -128,6 +136,25 @@ export default function EditProduct() {
     } else {
       setProduct(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleSizeChange = (index: number, field: keyof Size, value: string | number) => {
+    const newSizes = [...product.sizes];
+    newSizes[index] = { ...newSizes[index], [field]: value };
+    setProduct(prev => ({ ...prev, sizes: newSizes }));
+  };
+
+  const addSize = () => {
+    setProduct(prev => ({
+      ...prev,
+      sizes: [...prev.sizes, { width: 3, height: 3, unit: 'in' }]
+    }));
+  };
+
+  const removeSize = (index: number) => {
+    const newSizes = [...product.sizes];
+    newSizes.splice(index, 1);
+    setProduct(prev => ({ ...prev, sizes: newSizes }));
   };
 
   if (status === 'loading' || (loading && !isNewProduct)) {
@@ -338,6 +365,72 @@ export default function EditProduct() {
                         </label>
                       </div>
                     </fieldset>
+                  </div>
+
+                  {/* Sizes */}
+                  <div className="sm:col-span-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Available Sizes
+                    </label>
+                    <div className="space-y-4">
+                      {product.sizes.map((size, index) => (
+                        <div key={index} className="flex items-center space-x-4">
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Width</label>
+                            <input
+                              type="number"
+                              value={size.width}
+                              onChange={(e) => handleSizeChange(index, 'width', parseFloat(e.target.value))}
+                              className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-20 sm:text-sm border-gray-300 rounded-md text-black"
+                              step="0.1"
+                              min="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Height</label>
+                            <input
+                              type="number"
+                              value={size.height}
+                              onChange={(e) => handleSizeChange(index, 'height', parseFloat(e.target.value))}
+                              className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-20 sm:text-sm border-gray-300 rounded-md text-black"
+                              step="0.1"
+                              min="0"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-500 mb-1">Unit</label>
+                            <select
+                              value={size.unit}
+                              onChange={(e) => handleSizeChange(index, 'unit', e.target.value)}
+                              className="shadow-sm focus:ring-primary-500 focus:border-primary-500 block w-20 sm:text-sm border-gray-300 rounded-md text-black"
+                            >
+                              <option value="in">in</option>
+                              <option value="cm">cm</option>
+                            </select>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeSize(index)}
+                            className="mt-6 text-red-600 hover:text-red-800"
+                            disabled={product.sizes.length <= 1}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={addSize}
+                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="-ml-0.5 mr-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                        </svg>
+                        Add Size
+                      </button>
+                    </div>
                   </div>
 
                   {/* Description */}

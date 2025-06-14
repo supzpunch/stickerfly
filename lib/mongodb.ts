@@ -14,7 +14,9 @@ declare global {
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!MONGODB_URI) {
+// For development without MongoDB
+const isDev = process.env.NODE_ENV === 'development';
+if (!MONGODB_URI && !isDev) {
   throw new Error(
     'Please define the MONGODB_URI environment variable inside .env.local'
   );
@@ -33,6 +35,12 @@ if (!global.mongoose) {
 }
 
 export async function connectToDatabase() {
+  // For development without MongoDB, return mock connection
+  if (!MONGODB_URI && isDev) {
+    console.log('Development mode: Using mock MongoDB connection');
+    return null;
+  }
+
   if (cached.conn) {
     return cached.conn;
   }
@@ -54,6 +62,10 @@ export async function connectToDatabase() {
       })
       .catch((err) => {
         console.error('MongoDB connection error:', err);
+        if (isDev) {
+          console.log('Development mode: Continuing without MongoDB');
+          return mongoose; // Return mongoose instance without connection in dev
+        }
         throw err;
       });
   }
@@ -64,6 +76,10 @@ export async function connectToDatabase() {
     return cached.conn;
   } catch (e) {
     console.error('Failed to establish MongoDB connection:', e);
+    if (isDev) {
+      console.log('Development mode: Continuing without MongoDB');
+      return null;
+    }
     throw e;
   }
 }

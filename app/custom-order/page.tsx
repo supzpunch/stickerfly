@@ -22,6 +22,7 @@ export default function CustomOrder() {
   const [selectedSize, setSelectedSize] = useState<SizeOption | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
 
   // Predefined size options
   const sizeOptions: SizeOption[] = [
@@ -56,6 +57,7 @@ export default function CustomOrder() {
   const handleImageUpload = (url: string) => {
     setImageUrl(url);
     setError('');
+    setDebugInfo(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,44 +80,67 @@ export default function CustomOrder() {
     
     setLoading(true);
     setError('');
+    setDebugInfo(null);
     
     try {
+      // Create product data
+      const productData = {
+        name: 'Custom Sticker',
+        description: 'Custom designed sticker',
+        price: selectedSize.price,
+        sizes: [
+          {
+            width: selectedSize.width,
+            height: selectedSize.height,
+            unit: selectedSize.unit
+          }
+        ],
+        imageUrl: imageUrl,
+        category: 'custom',
+        isCustom: true,
+        images: [imageUrl] // Add to images array as well
+      };
+      
+      // Log the data being sent
+      console.log('Sending product data:', JSON.stringify(productData));
+      
       // Create custom product
       const productResponse = await fetch('/api/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          name: 'Custom Sticker',
-          description: 'Custom designed sticker',
-          price: selectedSize.price,
-          sizes: [
-            {
-              width: selectedSize.width,
-              height: selectedSize.height,
-              unit: selectedSize.unit,
-            }
-          ],
-          minQuantity: 10,
-          imageUrl: imageUrl,
-          category: 'custom',
-          isCustom: true,
-        }),
+        body: JSON.stringify(productData),
       });
       
-      if (!productResponse.ok) {
-        const data = await productResponse.json();
-        throw new Error(data.error || 'Failed to create custom product');
+      // Get the response text regardless of success/failure
+      const responseText = await productResponse.text();
+      let responseData;
+      
+      try {
+        // Try to parse as JSON
+        responseData = JSON.parse(responseText);
+      } catch (e) {
+        // If not valid JSON, use the text as is
+        responseData = { error: 'Invalid response: ' + responseText };
       }
       
-      const productData = await productResponse.json();
+      if (!productResponse.ok) {
+        throw new Error(responseData.error || `Failed to create custom product (${productResponse.status})`);
+      }
       
       // Add to cart or redirect to checkout
-      router.push(`/checkout?product=${productData.product._id}&quantity=${quantity}&size=${selectedSize.width}x${selectedSize.height}${selectedSize.unit}`);
+      router.push(`/checkout?product=${responseData.product._id}&quantity=${quantity}&size=${selectedSize.width}x${selectedSize.height}${selectedSize.unit}`);
     } catch (error) {
       console.error('Error creating custom order:', error);
       setError(error instanceof Error ? error.message : 'Failed to create custom order');
+      
+      // Capture debug info
+      if (error instanceof Error) {
+        setDebugInfo(error.stack || error.toString());
+      } else {
+        setDebugInfo(String(error));
+      }
     } finally {
       setLoading(false);
     }
@@ -201,7 +226,7 @@ export default function CustomOrder() {
                     name="quantity"
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value))}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md"
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm rounded-md bg-white text-gray-900"
                   >
                     <option value="10">10 stickers</option>
                     <option value="25">25 stickers (10% off)</option>
@@ -219,6 +244,12 @@ export default function CustomOrder() {
                         <p className="text-sm text-red-700">{error}</p>
                       </div>
                     </div>
+                  </div>
+                )}
+                
+                {debugInfo && (
+                  <div className="bg-gray-50 border-l-4 border-gray-400 p-4 overflow-auto max-h-40">
+                    <p className="text-xs text-gray-700 font-mono whitespace-pre-wrap">{debugInfo}</p>
                   </div>
                 )}
                 
