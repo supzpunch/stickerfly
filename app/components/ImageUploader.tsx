@@ -1,174 +1,179 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import Image from 'next/image';
+import { FiUpload, FiX, FiAlertCircle } from 'react-icons/fi';
+import { AiOutlineLoading3Quarters } from 'react-icons/ai';
 
 interface ImageUploaderProps {
-  onUploadComplete: (imageUrl: string) => void;
+  onImageUpload: (imageUrl: string) => void;
   className?: string;
-  label?: string;
 }
 
-export default function ImageUploader({ 
-  onUploadComplete, 
-  className = '', 
-  label = 'Upload Image' 
-}: ImageUploaderProps) {
-  const [isUploading, setIsUploading] = useState(false);
+export default function ImageUploader({ onImageUpload, className = '' }: ImageUploaderProps) {
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    // Reset states
+    setError(null);
+    setUploading(true);
+    setUploadProgress(10); // Start progress
 
-    // Check file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/svg+xml'];
-    if (!validTypes.includes(file.type)) {
-      setError(`Please upload a valid image file (JPEG, PNG, or SVG). Received: ${file.type}`);
-      return;
-    }
-
-    // Check file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setError(`File size too large. Maximum size is 5MB. Your file is ${(file.size / (1024 * 1024)).toFixed(2)}MB`);
-      return;
-    }
-
-    // Create a preview
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setPreview(e.target?.result as string);
-    };
-    reader.readAsDataURL(file);
-
-    // Upload the file
     try {
-      setIsUploading(true);
-      setError(null);
+      const file = acceptedFiles[0];
+      
+      if (!file) {
+        setError('No file selected');
+        setUploading(false);
+        return;
+      }
 
       console.log(`Uploading file: ${file.name}, type: ${file.type}, size: ${file.size} bytes`);
       
+      // Create form data for the file
       const formData = new FormData();
       formData.append('file', file);
-
+      
+      setUploadProgress(30); // Update progress
+      
+      // Upload the file to the server
       const response = await fetch('/api/upload', {
         method: 'POST',
         body: formData,
       });
-
+      
+      setUploadProgress(70); // Update progress
+      
+      // Parse the response
       const data = await response.json();
       
       if (!response.ok) {
-        console.error('Upload response error:', data);
+        console.error('Upload error:', data);
         throw new Error(data.error || data.details || 'Failed to upload image');
       }
+      
+      setUploadProgress(90); // Almost done
 
       console.log('Upload successful:', data);
-      onUploadComplete(data.url);
-    } catch (error) {
-      console.error('Upload error:', error);
-      setError(error instanceof Error ? error.message : 'Failed to upload image');
       
-      // If we have a preview but the upload failed, clear the preview
-      if (preview) {
-        setPreview(null);
+      // Set the uploaded image URL
+      if (data.url) {
+        setUploadedImage(data.url);
+        onImageUpload(data.url);
+      } else {
+        throw new Error('No URL returned from server');
       }
+    } catch (err) {
+      console.error('Error uploading image:', err);
+      setError(err instanceof Error ? err.message : 'Failed to upload image. Please try again.');
     } finally {
-      setIsUploading(false);
+      setUploading(false);
+      setUploadProgress(100); // Complete progress
+      setTimeout(() => setUploadProgress(0), 1000); // Reset progress after a delay
     }
+  }, [onImageUpload]);
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/jpeg': [],
+      'image/png': [],
+      'image/svg+xml': [],
+    },
+    maxSize: 5 * 1024 * 1024, // 5MB
+    multiple: false,
+  });
+
+  const removeImage = () => {
+    setUploadedImage(null);
+    setError(null);
+    onImageUpload(''); // Clear the image URL
   };
 
-  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      
-      // Create a synthetic change event for the file input
-      const fileInput = document.getElementById('file-upload') as HTMLInputElement;
-      if (fileInput) {
-        // Create a new FileList containing the dropped file
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        fileInput.files = dataTransfer.files;
-        
-        // Trigger the file change handler
-        const changeEvent = new Event('change', { bubbles: true });
-        fileInput.dispatchEvent(changeEvent);
-      }
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const retryUpload = () => {
+    setError(null);
   };
 
   return (
-    <div className={`${className}`}>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        {label}
-      </label>
-      <div className="mt-1 flex flex-col items-center">
-        {preview ? (
-          <div className="relative h-64 w-full mb-4">
-            <Image 
-              src={preview} 
-              alt="Preview" 
-              fill
-              className="object-contain rounded-md"
-            />
-          </div>
-        ) : (
-          <div 
-            className="flex justify-center items-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-primary-500 focus:outline-none"
-            onDrop={handleDrop}
-            onDragOver={handleDragOver}
-          >
-            <span className="flex items-center space-x-2">
-              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-              </svg>
-              <span className="font-medium text-gray-600">
-                {isUploading ? 'Uploading...' : 'Drop files to upload or click to browse'}
-              </span>
-            </span>
-          </div>
-        )}
-        
-        <input 
-          type="file" 
-          className="hidden" 
-          onChange={handleFileChange}
-          accept="image/jpeg,image/png,image/svg+xml"
-          disabled={isUploading}
-          id="file-upload"
-        />
-        
-        <label
-          htmlFor="file-upload"
-          className={`mt-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${
-            isUploading 
-              ? 'bg-gray-400 cursor-not-allowed' 
-              : 'bg-primary-600 hover:bg-primary-700 cursor-pointer'
+    <div className={`w-full ${className}`}>
+      {!uploadedImage && !uploading ? (
+        <div
+          {...getRootProps()}
+          className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-all duration-200 ${
+            isDragActive
+              ? 'border-blue-500 bg-blue-50'
+              : error 
+                ? 'border-red-500 bg-red-50' 
+                : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
           }`}
         >
-          {isUploading ? 'Uploading...' : preview ? 'Change Image' : 'Select Image'}
-        </label>
-
-        {error && (
-          <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-            <p className="text-sm text-red-600">
-              {error}
-            </p>
-            <p className="text-xs text-red-500 mt-1">
-              Please try again or contact support if the problem persists.
-            </p>
+          <input {...getInputProps()} />
+          <div className="flex flex-col items-center justify-center space-y-2">
+            {error ? (
+              <>
+                <FiAlertCircle className="w-10 h-10 text-red-500" />
+                <p className="text-red-500 font-medium">{error}</p>
+                <button 
+                  onClick={retryUpload}
+                  className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+                >
+                  Try Again
+                </button>
+              </>
+            ) : (
+              <>
+                <FiUpload className="w-10 h-10 text-gray-400" />
+                <p className="text-gray-500">
+                  {isDragActive
+                    ? 'Drop the image here...'
+                    : 'Drag & drop an image here, or click to select one'}
+                </p>
+                <p className="text-xs text-gray-400">
+                  Supports: JPEG, PNG, SVG (Max: 5MB)
+                </p>
+              </>
+            )}
           </div>
-        )}
-      </div>
+        </div>
+      ) : uploading ? (
+        <div className="border-2 rounded-lg p-6 text-center border-blue-300 bg-blue-50">
+          <div className="flex flex-col items-center justify-center space-y-3">
+            <AiOutlineLoading3Quarters className="w-10 h-10 text-blue-500 animate-spin" />
+            <p className="text-blue-500 font-medium">Uploading image...</p>
+            
+            {/* Progress bar */}
+            <div className="w-full h-2 bg-blue-100 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-blue-500 transition-all duration-300"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      ) : uploadedImage && (
+        <div className="relative border rounded-lg overflow-hidden">
+          <div className="aspect-w-16 aspect-h-9 relative">
+            <Image
+              src={uploadedImage}
+              alt="Uploaded image"
+              className="object-cover"
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+            />
+          </div>
+          <button
+            onClick={removeImage}
+            className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition"
+            aria-label="Remove image"
+          >
+            <FiX className="w-5 h-5" />
+          </button>
+        </div>
+      )}
     </div>
   );
 } 

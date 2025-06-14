@@ -97,6 +97,36 @@ export default function Home() {
             </p>
           </Link>
         </div>
+        
+        {/* Admin Section */}
+        <div className="mt-16 border-t pt-8">
+          <h2 className="text-2xl font-bold mb-6">Admin Area</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Link
+              href="/admin/products"
+              className="bg-white p-5 rounded-lg border border-gray-200 shadow hover:shadow-md transition"
+            >
+              <h3 className="font-semibold text-lg">Product Management</h3>
+              <p className="text-gray-600 text-sm mt-1">Add, edit, and manage products</p>
+            </Link>
+            
+            <Link
+              href="/test-upload"
+              className="bg-white p-5 rounded-lg border border-gray-200 shadow hover:shadow-md transition"
+            >
+              <h3 className="font-semibold text-lg">Test Upload</h3>
+              <p className="text-gray-600 text-sm mt-1">Test and debug file upload functionality</p>
+            </Link>
+            
+            <Link
+              href="/api/debug-upload"
+              className="bg-white p-5 rounded-lg border border-gray-200 shadow hover:shadow-md transition"
+            >
+              <h3 className="font-semibold text-lg">Upload Debug Info</h3>
+              <p className="text-gray-600 text-sm mt-1">View technical details about upload system</p>
+            </Link>
+          </div>
+        </div>
       </div>
     </main>
   )

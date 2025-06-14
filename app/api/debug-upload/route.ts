@@ -1,67 +1,94 @@
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync, statSync } from 'fs';
+import { existsSync, statSync, readdirSync, accessSync, constants } from 'fs';
+import { join, resolve } from 'path';
+import os from 'os';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    // Get the upload directory path
-    const uploadDir = join(process.cwd(), 'public', 'uploads');
+    const cwd = process.cwd();
+    const publicDir = join(cwd, 'public');
+    const uploadsDir = join(publicDir, 'uploads');
     
-    // Check if directory exists
-    let dirExists = false;
-    let dirWritable = false;
-    let dirInfo = null;
+    // Check if directories exist
+    const publicExists = existsSync(publicDir);
+    const uploadsExists = existsSync(uploadsDir);
+    
+    // Get directory stats if they exist
+    const publicStats = publicExists ? statSync(publicDir) : null;
+    const uploadsStats = uploadsExists ? statSync(uploadsDir) : null;
+    
+    // Check write permissions
+    let publicWritable = false;
+    let uploadsWritable = false;
     
     try {
-      if (existsSync(uploadDir)) {
-        dirExists = true;
-        dirInfo = statSync(uploadDir);
-        
-        // Try to create a test file to check if the directory is writable
-        const testFilePath = join(uploadDir, 'test-write.txt');
-        await writeFile(testFilePath, 'Test write permission');
-        dirWritable = true;
+      if (publicExists) {
+        accessSync(publicDir, constants.W_OK);
+        publicWritable = true;
       }
-    } catch (error) {
-      console.error('Error checking directory:', error);
+    } catch (e) {
+      publicWritable = false;
     }
     
-    // Try to create the directory if it doesn't exist
-    if (!dirExists) {
-      try {
-        await mkdir(uploadDir, { recursive: true });
-        dirExists = true;
-        
-        // Check if the newly created directory is writable
-        const testFilePath = join(uploadDir, 'test-write.txt');
-        await writeFile(testFilePath, 'Test write permission');
-        dirWritable = true;
-      } catch (error) {
-        console.error('Error creating directory:', error);
+    try {
+      if (uploadsExists) {
+        accessSync(uploadsDir, constants.W_OK);
+        uploadsWritable = true;
       }
+    } catch (e) {
+      uploadsWritable = false;
     }
     
+    // List files in uploads directory if it exists
+    const uploadFiles = uploadsExists ? readdirSync(uploadsDir).slice(0, 20) : [];
+    
+    // Get some system info
+    const systemInfo = {
+      platform: os.platform(),
+      type: os.type(),
+      release: os.release(),
+      arch: os.arch(),
+      tmpdir: os.tmpdir(),
+      homedir: os.homedir(),
+      hostname: os.hostname(),
+      userInfo: os.userInfo({ encoding: 'utf8' }),
+    };
+    
+    // Return all the debug info
     return NextResponse.json({
-      success: true,
-      dirExists,
-      dirWritable,
-      dirInfo: dirInfo ? {
-        isDirectory: dirInfo.isDirectory(),
-        mode: dirInfo.mode,
-        size: dirInfo.size,
-        uid: dirInfo.uid,
-        gid: dirInfo.gid,
-      } : null,
-      uploadDir,
-      cwd: process.cwd(),
+      cwd,
+      publicDir: {
+        path: publicDir,
+        exists: publicExists,
+        isDirectory: publicStats?.isDirectory() || false,
+        permissions: publicStats?.mode.toString(8) || null,
+        writable: publicWritable,
+      },
+      uploadsDir: {
+        path: uploadsDir,
+        absolutePath: resolve(uploadsDir),
+        exists: uploadsExists,
+        isDirectory: uploadsStats?.isDirectory() || false,
+        permissions: uploadsStats?.mode.toString(8) || null,
+        writable: uploadsWritable,
+        files: uploadFiles,
+      },
+      env: {
+        NODE_ENV: process.env.NODE_ENV,
+      },
+      systemInfo,
     });
   } catch (error) {
-    console.error('Debug error:', error);
-    return NextResponse.json({
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : null,
-    }, { status: 500 });
+    console.error('Error in debug-upload API:', error);
+    return NextResponse.json(
+      { 
+        error: 'Error debugging upload directory',
+        details: error instanceof Error ? error.message : 'Unknown error',
+      },
+      { status: 500 }
+    );
   }
 } 

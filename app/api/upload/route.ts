@@ -2,14 +2,20 @@ import { NextResponse } from 'next/server';
 import { writeFile, mkdir } from 'fs/promises';
 import { join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { existsSync } from 'fs';
+import { existsSync, createWriteStream, copyFileSync } from 'fs';
+import { Readable } from 'stream';
+import path from 'path';
+import os from 'os';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 // Create uploads directory if it doesn't exist
 async function ensureUploadDir() {
-  const uploadDir = join(process.cwd(), 'public', 'uploads');
+  // Use absolute path to make sure we're writing to the correct location
+  const uploadDir = path.resolve(process.cwd(), 'public', 'uploads');
+  console.log(`Upload directory absolute path: ${uploadDir}`);
+  
   try {
     // Check if directory exists
     if (!existsSync(uploadDir)) {
@@ -21,6 +27,71 @@ async function ensureUploadDir() {
     return uploadDir;
   } catch (error) {
     console.error('Error creating upload directory:', error);
+    throw error;
+  }
+}
+
+// Helper function to convert Buffer to Stream
+function bufferToStream(buffer: Buffer) {
+  const readable = new Readable();
+  readable._read = () => {}; // _read is required but you can noop it
+  readable.push(buffer);
+  readable.push(null);
+  return readable;
+}
+
+// Helper function to write file using streams
+function writeFileWithStream(filePath: string, buffer: Buffer): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const stream = createWriteStream(filePath);
+    const readable = bufferToStream(buffer);
+    
+    stream.on('error', (error) => {
+      console.error(`Stream error writing to ${filePath}:`, error);
+      reject(error);
+    });
+    
+    stream.on('finish', () => {
+      console.log(`File successfully written to ${filePath} using stream`);
+      resolve();
+    });
+    
+    readable.pipe(stream);
+  });
+}
+
+// Helper function to save file to temp directory first, then move to final location
+async function saveFileThroughTemp(buffer: Buffer, finalPath: string): Promise<void> {
+  try {
+    // Create a temporary file path in the OS temp directory
+    const tempDir = os.tmpdir();
+    const tempFilename = `upload-${uuidv4()}`;
+    const tempPath = path.join(tempDir, tempFilename);
+    
+    console.log(`Saving to temporary location: ${tempPath}`);
+    
+    // Write to temp location first
+    await writeFile(tempPath, buffer);
+    
+    // Verify temp file was created
+    if (!existsSync(tempPath)) {
+      throw new Error(`Failed to create temporary file at ${tempPath}`);
+    }
+    
+    console.log(`Temporary file created successfully: ${tempPath}`);
+    
+    // Copy from temp to final destination
+    console.log(`Copying from ${tempPath} to ${finalPath}`);
+    copyFileSync(tempPath, finalPath);
+    
+    // Verify final file exists
+    if (!existsSync(finalPath)) {
+      throw new Error(`Failed to copy file to final destination: ${finalPath}`);
+    }
+    
+    console.log(`File successfully saved to final destination: ${finalPath}`);
+  } catch (error) {
+    console.error('Error in saveFileThroughTemp:', error);
     throw error;
   }
 }
@@ -72,7 +143,7 @@ export async function POST(request: Request) {
     const uploadDir = await ensureUploadDir();
     
     // File path where the image will be saved
-    const filePath = join(uploadDir, uniqueFilename);
+    const filePath = path.resolve(uploadDir, uniqueFilename);
     console.log(`Saving file to: ${filePath}`);
     
     try {
@@ -80,8 +151,29 @@ export async function POST(request: Request) {
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       
-      // Write file to the server's filesystem
-      await writeFile(filePath, buffer);
+      // Try different methods to save the file
+      try {
+        // Try saving through temp file first (most reliable)
+        await saveFileThroughTemp(buffer, filePath);
+      } catch (tempError) {
+        console.error('Error with temp file method, trying direct write:', tempError);
+        
+        try {
+          // Try direct write with fs.writeFile
+          console.log('Attempting to write file using fs.writeFile...');
+          await writeFile(filePath, buffer);
+          console.log('File successfully written using fs.writeFile');
+        } catch (writeError) {
+          console.error('Error with fs.writeFile, trying stream method:', writeError);
+          await writeFileWithStream(filePath, buffer);
+        }
+      }
+      
+      // Verify the file was created
+      if (!existsSync(filePath)) {
+        throw new Error(`File was not created at ${filePath}`);
+      }
+      
       console.log(`File successfully written to disk: ${filePath}`);
       
       // Public URL for the uploaded file
@@ -98,7 +190,8 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { 
           error: 'Failed to save uploaded file to disk',
-          details: writeError instanceof Error ? writeError.message : 'Unknown error'
+          details: writeError instanceof Error ? writeError.message : 'Unknown error',
+          path: filePath
         },
         { status: 500 }
       );

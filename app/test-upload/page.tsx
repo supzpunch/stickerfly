@@ -1,95 +1,232 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import ImageUploader from '../components/ImageUploader';
+import Link from 'next/link';
 import Image from 'next/image';
 
-export default function TestUploadPage() {
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const handleUploadComplete = (imageUrl: string) => {
-    setUploadedImage(imageUrl);
+// Define types for our debug info
+interface DebugInfo {
+  status?: string;
+  message?: string;
+  fileCreated?: boolean;
+  fileSize?: number;
+  statusCode?: number;
+  responseData?: any;
+  headers?: Record<string, string>;
+  error?: string;
+  uploadsDir?: {
+    exists?: boolean;
+    status?: number;
+    text?: string;
+    error?: string;
   };
-  
-  const checkUploadDir = async () => {
-    setIsLoading(true);
-    try {
-      const response = await fetch('/api/debug-upload');
-      const data = await response.json();
-      setDebugInfo(data);
-    } catch (error) {
-      console.error('Error checking upload directory:', error);
-      setDebugInfo({ error: error instanceof Error ? error.message : 'Unknown error' });
-    } finally {
-      setIsLoading(false);
+  debugApiResponse?: any;
+  debugApiError?: string;
+  [key: string]: any; // Allow for additional properties
+}
+
+export default function TestUpload() {
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string>('');
+  const [uploadCount, setUploadCount] = useState<number>(0);
+  const [uploadHistory, setUploadHistory] = useState<string[]>([]);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo>({});
+
+  const handleImageUpload = (imageUrl: string) => {
+    console.log('Image uploaded:', imageUrl);
+    setUploadedImageUrl(imageUrl);
+    
+    if (imageUrl) {
+      setUploadCount(prev => prev + 1);
+      setUploadHistory(prev => [...prev, imageUrl]);
     }
   };
-  
+
+  // Function to test direct file upload via fetch API
+  const testDirectUpload = async () => {
+    try {
+      setDebugInfo({ status: 'starting', message: 'Creating test file...' });
+      
+      // Create a simple test file (1x1 pixel transparent PNG)
+      const base64Data = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+      const byteCharacters = atob(base64Data);
+      const byteNumbers = new Array(byteCharacters.length);
+      
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      
+      const byteArray = new Uint8Array(byteNumbers);
+      const file = new File([byteArray], 'test-pixel.png', { type: 'image/png' });
+      
+      setDebugInfo(prev => ({ ...prev, fileCreated: true, fileSize: file.size }));
+      
+      // Create FormData
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      setDebugInfo(prev => ({ ...prev, status: 'uploading', message: 'Sending request...' }));
+      
+      // Upload the file
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const data = await response.json();
+      
+      setDebugInfo(prev => ({ 
+        ...prev, 
+        status: response.ok ? 'success' : 'error',
+        statusCode: response.status,
+        responseData: data,
+        headers: Object.fromEntries(response.headers.entries()),
+      }));
+      
+      if (response.ok && data.url) {
+        setUploadedImageUrl(data.url);
+        setUploadCount(prev => prev + 1);
+        setUploadHistory(prev => [...prev, data.url]);
+      }
+    } catch (error) {
+      console.error('Direct upload test error:', error);
+      setDebugInfo(prev => ({ 
+        ...prev, 
+        status: 'error',
+        error: error instanceof Error ? error.message : String(error)
+      }));
+    }
+  };
+
+  // Function to check if uploads directory exists
+  const checkUploadsDir = async () => {
+    try {
+      const response = await fetch('/uploads/test-permissions.txt');
+      const exists = response.ok;
+      const status = response.status;
+      const text = exists ? await response.text() : '';
+      
+      setDebugInfo(prev => ({ 
+        ...prev, 
+        uploadsDir: {
+          exists,
+          status,
+          text: text.substring(0, 100) // Limit text length
+        }
+      }));
+    } catch (error) {
+      setDebugInfo(prev => ({ 
+        ...prev, 
+        uploadsDir: {
+          error: error instanceof Error ? error.message : String(error)
+        }
+      }));
+    }
+  };
+
+  // Function to get detailed debug info from API
+  const getDebugInfo = async () => {
+    try {
+      setDebugInfo(prev => ({ ...prev, status: 'loading', message: 'Fetching debug info...' }));
+      
+      const response = await fetch('/api/debug-upload');
+      const data = await response.json();
+      
+      setDebugInfo(prev => ({ 
+        ...prev, 
+        status: response.ok ? 'success' : 'error',
+        debugApiResponse: data
+      }));
+    } catch (error) {
+      console.error('Error fetching debug info:', error);
+      setDebugInfo(prev => ({ 
+        ...prev, 
+        status: 'error',
+        debugApiError: error instanceof Error ? error.message : String(error)
+      }));
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Image Upload Test</h1>
-            <p className="mt-2 text-gray-600">
-              This page tests the image upload functionality.
-            </p>
-          </div>
+    <div className="container mx-auto p-6 max-w-4xl">
+      <header className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">Image Upload Test Page</h1>
+        <Link href="/" className="text-blue-500 hover:underline">
+          Back to Home
+        </Link>
+      </header>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Upload Test</h2>
+          <ImageUploader onImageUpload={handleImageUpload} />
           
-          <div className="mb-8">
-            <ImageUploader 
-              onUploadComplete={handleUploadComplete}
-              label="Test Image Upload"
-            />
-          </div>
-          
-          {uploadedImage && (
-            <div className="mb-8 p-4 bg-green-50 rounded-lg">
-              <h2 className="text-lg font-medium text-green-800 mb-2">Upload Successful!</h2>
-              <p className="text-sm text-green-700 mb-4">
-                Image URL: <code className="bg-green-100 px-1 py-0.5 rounded">{uploadedImage}</code>
+          <div className="mt-6">
+            <h3 className="font-medium mb-2">Upload Stats:</h3>
+            <p>Total uploads: {uploadCount}</p>
+            {uploadedImageUrl && (
+              <p className="mt-2">
+                Latest upload: <code className="bg-gray-100 p-1 rounded">{uploadedImageUrl}</code>
               </p>
-              <div className="relative h-64 w-full border border-green-200 rounded-md overflow-hidden">
-                <Image
-                  src={uploadedImage}
-                  alt="Uploaded image"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            </div>
-          )}
-          
-          <div className="border-t border-gray-200 pt-4 mt-6">
-            <h2 className="text-lg font-medium text-gray-900 mb-2">Debug Tools</h2>
-            <button
-              onClick={checkUploadDir}
-              disabled={isLoading}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:bg-blue-300"
-            >
-              {isLoading ? 'Checking...' : 'Check Upload Directory'}
-            </button>
-            
-            {debugInfo && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                <h3 className="text-md font-medium text-gray-700 mb-2">Debug Information</h3>
-                <pre className="text-xs bg-gray-100 p-3 rounded overflow-auto max-h-96">
-                  {JSON.stringify(debugInfo, null, 2)}
-                </pre>
-              </div>
             )}
           </div>
+        </div>
+        
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Debug Tools</h2>
           
-          <div className="mt-8 text-center">
-            <Link href="/" className="text-blue-600 hover:text-blue-800">
-              Back to Home
-            </Link>
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <button 
+                onClick={testDirectUpload}
+                className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition"
+              >
+                Test Direct Upload
+              </button>
+              
+              <button 
+                onClick={checkUploadsDir}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              >
+                Check Uploads Directory
+              </button>
+              
+              <button 
+                onClick={getDebugInfo}
+                className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition"
+              >
+                Get Debug Info
+              </button>
+            </div>
+            
+            <div className="mt-4">
+              <h3 className="font-medium mb-2">Debug Info:</h3>
+              <pre className="bg-gray-100 p-3 rounded text-xs overflow-auto max-h-60">
+                {JSON.stringify(debugInfo, null, 2)}
+              </pre>
+            </div>
           </div>
         </div>
       </div>
+      
+      {uploadHistory.length > 0 && (
+        <div className="mt-8 bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-semibold mb-4">Upload History</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {uploadHistory.map((url, index) => (
+              <div key={index} className="relative aspect-square border rounded overflow-hidden">
+                <Image 
+                  src={url} 
+                  alt={`Uploaded image ${index + 1}`} 
+                  fill 
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 } 
