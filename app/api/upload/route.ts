@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
-import { getServerSession } from 'next-auth';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -14,14 +13,8 @@ cloudinary.config({
 
 export async function POST(request: Request) {
   try {
-    const session = await getServerSession();
-
-    if (!session || !session.user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
-    }
+    // Remove session check to allow public uploads
+    // This is necessary for the custom order page where users might not be logged in
 
     const formData = await request.formData();
     const file = formData.get('file') as File;

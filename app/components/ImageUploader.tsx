@@ -106,7 +106,8 @@ export default function ImageUploader({
           disabled={isUploading}
           id="file-upload"
         />
-        <label 
+        
+        <label
           htmlFor="file-upload"
           className={`mt-4 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white ${
             isUploading 
