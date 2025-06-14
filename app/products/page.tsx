@@ -58,10 +58,15 @@ export default function Products() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50">
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">Stickers</h1>
+          <div className="flex items-center justify-center">
+            <span className="text-3xl mr-3 animate-pulse">🪰</span>
+            <h1 className="text-3xl font-bold text-gray-900">Browse Products</h1>
+            <span className="text-3xl ml-3 animate-pulse">🪰</span>
+          </div>
+          <p className="text-center text-gray-600 mt-2">Let your creativity fly with our premium sticker collection!</p>
         </div>
       </header>
 
@@ -149,17 +154,19 @@ export default function Products() {
           {/* Loading State */}
           {loading && (
             <div className="text-center py-12">
-              <div className="spinner-border text-primary" role="status">
-                <span className="sr-only">Loading...</span>
+              <div className="animate-bounce mb-4 text-4xl">
+                🪰
               </div>
-              <p className="mt-2 text-gray-500">Loading products...</p>
+              <p className="mt-2 text-gray-500">Loading products... Watch them fly in!</p>
             </div>
           )}
 
           {/* Products Grid */}
           {!loading && products.length === 0 ? (
             <div className="text-center py-12">
+              <div className="text-6xl mb-4">🪰</div>
               <p className="text-gray-500">No products found in this category.</p>
+              <p className="text-gray-400 mt-2">Try a different category or check back later!</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

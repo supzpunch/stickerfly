@@ -74,32 +74,54 @@ export default function Dashboard() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">My Dashboard</h1>
-        <p className="text-gray-600">Welcome back, {session?.user?.name}!</p>
+        <div className="flex items-center justify-center mb-4">
+          <span className="text-3xl mr-3 animate-pulse">🪰</span>
+          <h1 className="text-3xl font-bold">My Dashboard</h1>
+          <span className="text-3xl ml-3 animate-pulse">🪰</span>
+        </div>
+        <p className="text-gray-600 text-center">Welcome back, {session?.user?.name}! Ready to let your creativity fly?</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="card">
           <div className="card-body">
-            <h2 className="text-xl font-semibold mb-2">My Orders</h2>
+            <h2 className="text-xl font-semibold mb-2 flex items-center">
+              <span className="mr-2">📦</span>
+              My Orders
+            </h2>
             <p className="text-gray-600 mb-4">View and track your orders</p>
-            <Link href="#orders" className="btn-primary inline-block">View Orders</Link>
+            <Link href="/dashboard/orders" className="btn-primary inline-block flex items-center">
+              <span className="mr-2">👁️</span>
+              View Orders
+            </Link>
           </div>
         </div>
         
         <div className="card">
           <div className="card-body">
-            <h2 className="text-xl font-semibold mb-2">Account Settings</h2>
+            <h2 className="text-xl font-semibold mb-2 flex items-center">
+              <span className="mr-2">⚙️</span>
+              Account Settings
+            </h2>
             <p className="text-gray-600 mb-4">Update your account information</p>
-            <Link href="/dashboard/settings" className="btn-primary inline-block">Settings</Link>
+            <Link href="/dashboard/settings" className="btn-primary inline-block flex items-center">
+              <span className="mr-2">🔧</span>
+              Settings
+            </Link>
           </div>
         </div>
         
         <div className="card">
           <div className="card-body">
-            <h2 className="text-xl font-semibold mb-2">Custom Order</h2>
+            <h2 className="text-xl font-semibold mb-2 flex items-center">
+              <span className="mr-2">🎨</span>
+              Custom Order
+            </h2>
             <p className="text-gray-600 mb-4">Create a new custom sticker order</p>
-            <Link href="/custom-order" className="btn-primary inline-block">Start Order</Link>
+            <Link href="/custom-order" className="btn-primary inline-block flex items-center">
+              <span className="mr-2">🚀</span>
+              Start Order
+            </Link>
           </div>
         </div>
       </div>
@@ -115,8 +137,13 @@ export default function Dashboard() {
           </div>
         ) : orders.length === 0 ? (
           <div className="bg-gray-50 p-6 rounded-md text-center">
+            <div className="text-4xl mb-4">🪰</div>
             <p className="text-gray-600 mb-4">You haven't placed any orders yet.</p>
-            <Link href="/products" className="btn-primary">Browse Products</Link>
+            <p className="text-gray-500 mb-4">Ready to let your creativity fly?</p>
+            <Link href="/products" className="btn-primary inline-flex items-center">
+              <span className="mr-2">🛍️</span>
+              Browse Products
+            </Link>
           </div>
         ) : (
           <div className="overflow-x-auto">

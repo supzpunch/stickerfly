@@ -33,7 +33,7 @@ export default function Home() {
             </div>
             <div className="md:w-1/2">
               <div className="relative h-80 w-full">
-                {/* Replace with actual image */}
+                {D:\Stickerfly\lib\stickerfly_main.jpg}
                 <div className="bg-gray-200 h-full w-full rounded-lg flex items-center justify-center">
                   <span className="text-gray-500">Hero Image</span>
                 </div>
@@ -55,7 +55,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-3">Premium Quality</h3>
-              <p className="text-gray-600">Our stickers are made with high-quality vinyl and protected with a laminate that guards against scratches, water, and sunlight.</p>
+              <p className="text-gray-600">Our stickers are made with high-quality vinyl that guards against scratches, water, and sunlight.</p>
             </div>
             <div className="text-center p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow">
               <div className="bg-primary-100 p-4 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
